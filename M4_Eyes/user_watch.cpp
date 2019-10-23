@@ -23,6 +23,7 @@ void user_setup(void) {
   showSplashScreen = false;
   moveEyesRandomly = false;
   heatSensor.setup();
+  heatSensor.rotation = HeatSensor::ROTATE_90;
 }
 
 // Called periodically during eye animation. This is invoked in the
