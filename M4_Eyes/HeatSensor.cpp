@@ -10,6 +10,11 @@ Adafruit_AMG88xx amg;
 
 float pixels[AMG88xx_PIXEL_ARRAY_SIZE];
 
+HeatSensor::HeatSensor()
+{
+    rotation = ROTATE_0;
+}
+
 void HeatSensor::setup()
 {
     x = 0;
@@ -27,6 +32,27 @@ void HeatSensor::setup()
 
     yield();
     delay(100); // let sensor boot up
+}
+
+void HeatSensor::rotate_coords(float& x, float& y)
+{
+    float oldX = x;
+    float oldY = y;
+
+    switch (rotation) {
+    case ROTATE_90:
+        y = oldX;
+        x = -oldY;
+        break;
+    case ROTATE_180:
+        x = -oldX;
+        y = -oldY;
+        break;
+    case ROTATE_270:
+        y = -oldX;
+        x = oldY;
+        break;
+    }
 }
 
 // Find the approximate X and Y values of the peak temperature in the pixel array,
@@ -54,6 +80,8 @@ void HeatSensor::find_focus()
     x = max(-1.0, min(1.0, x));
     y = max(-1.0, min(1.0, y));
     magnitude = max(0, min(50, maxVal - 20));
+
+    rotate_coords(x, y);
 
     // Report.
 #define SERIAL_OUT  3

@@ -19,11 +19,25 @@ public:
     // The current magnitude estimate, in degrees C.
     float magnitude;
 
-    // Must be called once.
+    // Set this to adjust the readings before they're reported.
+    // If the board is rotated clockwise by the given angle from its home orientation,
+    // described above, set the corresponding enum value.
+    enum {
+        ROTATE_0, ROTATE_90, ROTATE_180, ROTATE_270
+    } rotation;
+
+    // Constructor.
+    HeatSensor();
+
+    // Must be called once to initialize the sensor.
     void setup();
 
     // Reads the sensor and updates x, y, and magnitude.
     void find_focus();
+
+protected:
+    // Modifies the given coordinates in-place according to the current rotation.
+    void rotate_coords(float& x, float& y);
 };
 
 #endif
