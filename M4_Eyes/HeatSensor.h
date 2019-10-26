@@ -16,7 +16,8 @@ public:
     // The current focus position, each from -1.0 .. +1.0.
     float x, y;
 
-    // The current magnitude estimate, in degrees C.
+    // The current magnitude estimate, in degrees C above 20.
+    // 0 is the minimum number returned.
     float magnitude;
 
     // Set this to adjust the readings before they're reported.
