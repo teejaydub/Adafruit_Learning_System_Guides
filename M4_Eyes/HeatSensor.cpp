@@ -6,6 +6,13 @@
 #include <Wire.h>
 #include <Adafruit_AMG88xx.h>
 
+// Any movement of the focus point that's greater than this in either X or Y
+// relative to the last reading is suppressed.
+// This to prevent the occasional wild reading, whether from electrical issues,
+// firmware bugs, timing issues, or a busy image from causing nonsensically rapid movement.
+// The larger the value, the more tolerant the filter is of big changes.
+const float SQUELCH = 0.6;
+
 Adafruit_AMG88xx amg;
 
 float pixels[AMG88xx_PIXEL_ARRAY_SIZE];
@@ -55,6 +62,36 @@ void HeatSensor::rotate_coords(float& x, float& y)
     }
 }
 
+void swap(float& a, float& b) {
+    float temp = a;
+    a = b;
+    b = temp;
+}
+
+void HeatSensor::filter_coords(float& x, float& y)
+{
+    static float oldX = 0.0;
+    static float oldY = 0.0;
+
+    if (abs(x - oldX) >= SQUELCH || abs(y - oldY) >= SQUELCH) {
+        // Filter this one out.
+        // So, use the last coordinates, but save these for comparison next time.
+        #if SERIAL_OUT == 3 || SERIAL_OUT == 2
+            // Print coordinates and brightness
+            Serial.print("filtering out: ");
+            Serial.print(x);
+            Serial.print(',');
+            Serial.println(y);
+        #endif
+        swap(x, oldX);
+        swap(y, oldY);
+    } else {
+        // Just store these for next time; don't change them.
+        oldX = x;
+        oldY = y;
+    }
+}
+
 // Find the approximate X and Y values of the peak temperature in the pixel array,
 // along with the magnitude of the brightest spot.
 void HeatSensor::find_focus()
@@ -82,6 +119,7 @@ void HeatSensor::find_focus()
     magnitude = max(0, min(50, maxVal - 20));
 
     rotate_coords(x, y);
+    filter_coords(x, y);
 
     // Report.
 #define SERIAL_OUT  3

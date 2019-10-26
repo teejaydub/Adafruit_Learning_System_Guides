@@ -38,6 +38,10 @@ public:
 protected:
     // Modifies the given coordinates in-place according to the current rotation.
     void rotate_coords(float& x, float& y);
+
+    // Prevents noise from causing too-rapid fluctuation of the focus point.
+    // Modifies the given coordinates in-place.
+    void filter_coords(float& x, float& y);
 };
 
 #endif
