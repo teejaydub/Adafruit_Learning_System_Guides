@@ -11,12 +11,16 @@
 #ifndef __HEAT_SENSOR_H
 #define __HEAT_SENSOR_H
 
+// Below this pixel temperature, we take it that there's "no" visible heat.
+// That is, this maps to a zero magnitude, and anything lower is represented as zero.
+const float MIN_MAGNITUDE = 19;
+
 class HeatSensor {
 public:
     // The current focus position, each from -1.0 .. +1.0.
     float x, y;
 
-    // The current magnitude estimate, in degrees C above 20.
+    // The current magnitude estimate, in degrees C above MIN_MAGNITUDE.
     // 0 is the minimum number returned.
     float magnitude;
 

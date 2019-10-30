@@ -116,7 +116,7 @@ void HeatSensor::find_focus()
     y = y / AMG88xx_PIXEL_ARRAY_SIZE / 5.0;
     x = max(-1.0, min(1.0, x));
     y = max(-1.0, min(1.0, y));
-    magnitude = max(0, min(50, maxVal - 20));
+    magnitude = max(0, min(50, maxVal - MIN_MAGNITUDE));
 
     rotate_coords(x, y);
     filter_coords(x, y);
@@ -139,7 +139,7 @@ void HeatSensor::find_focus()
     const char charPixels[] = " .-*o0#";
     Serial.println("========");
     for (int i = 1; i <= AMG88xx_PIXEL_ARRAY_SIZE; i++) {
-      int val = min(5, round(max(0, pixels[i-1] - 20) / 2));
+      int val = min(5, round(max(0, pixels[i-1] - MIN_MAGNITUDE) / 2));
       Serial.print(charPixels[val]);
       if (i % 8 == 0) 
         Serial.println();
