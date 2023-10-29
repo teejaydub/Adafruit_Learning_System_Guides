@@ -206,7 +206,7 @@ extern int             file_setup(bool msc=true);
 extern void            handle_filesystem_change();
 // This is set true when filesystem contents have changed.
 // Set true initially so the program starts with the "changed" task.
-extern bool            filesystem_change_flag GLOBAL_INIT(true);
+GLOBAL_VAR bool        filesystem_change_flag GLOBAL_INIT(true);
 extern void            loadConfig(char *filename);
 extern ImageReturnCode loadEyelid(char *filename, uint8_t *minArray, uint8_t *maxArray, uint8_t init, uint32_t maxRam);
 extern ImageReturnCode loadTexture(char *filename, uint16_t **data, uint16_t *width, uint16_t *height, uint32_t maxRam);
