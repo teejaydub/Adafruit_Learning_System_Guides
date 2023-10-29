@@ -1,4 +1,4 @@
-#if 0 // Change to 1 to enable this code (referenced by user_watch.cpp)
+#if 1 // Change to 1 to enable this code (referenced by user_watch.cpp)
 // CORRESPONDING LINE IN user_watch.cpp MUST ALSO BE ENABLED!
 
 /* Read the IR sensor and try to figure out where the heat is located. 
