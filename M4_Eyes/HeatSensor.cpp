@@ -1,14 +1,28 @@
+#if 0 // Change to 1 to enable this code (referenced by user_watch.cpp)
+// CORRESPONDING LINE IN user_watch.cpp MUST ALSO BE ENABLED!
+
 /* Read the IR sensor and try to figure out where the heat is located. 
 */
-
 #include "HeatSensor.h"
 
 #include <Wire.h>
 #include <Adafruit_AMG88xx.h>
 
+// Any movement of the focus point that's greater than this in either X or Y
+// relative to the last reading is suppressed.
+// This to prevent the occasional wild reading, whether from electrical issues,
+// firmware bugs, timing issues, or a busy image from causing nonsensically rapid movement.
+// The larger the value, the more tolerant the filter is of big changes.
+const float SQUELCH = 0.6;
+
 Adafruit_AMG88xx amg;
 
 float pixels[AMG88xx_PIXEL_ARRAY_SIZE];
+
+HeatSensor::HeatSensor()
+{
+    rotation = ROTATE_0;
+}
 
 void HeatSensor::setup()
 {
@@ -27,6 +41,57 @@ void HeatSensor::setup()
 
     yield();
     delay(100); // let sensor boot up
+}
+
+void HeatSensor::rotate_coords(float& x, float& y)
+{
+    float oldX = x;
+    float oldY = y;
+
+    switch (rotation) {
+    case ROTATE_90:
+        y = oldX;
+        x = -oldY;
+        break;
+    case ROTATE_180:
+        x = -oldX;
+        y = -oldY;
+        break;
+    case ROTATE_270:
+        y = -oldX;
+        x = oldY;
+        break;
+    }
+}
+
+void swap(float& a, float& b) {
+    float temp = a;
+    a = b;
+    b = temp;
+}
+
+void HeatSensor::filter_coords(float& x, float& y)
+{
+    static float oldX = 0.0;
+    static float oldY = 0.0;
+
+    if (abs(x - oldX) >= SQUELCH || abs(y - oldY) >= SQUELCH) {
+        // Filter this one out.
+        // So, use the last coordinates, but save these for comparison next time.
+        #if SERIAL_OUT == 3 || SERIAL_OUT == 2
+            // Print coordinates and brightness
+            Serial.print("filtering out: ");
+            Serial.print(x);
+            Serial.print(',');
+            Serial.println(y);
+        #endif
+        swap(x, oldX);
+        swap(y, oldY);
+    } else {
+        // Just store these for next time; don't change them.
+        oldX = x;
+        oldY = y;
+    }
 }
 
 // Find the approximate X and Y values of the peak temperature in the pixel array,
@@ -53,7 +118,10 @@ void HeatSensor::find_focus()
     y = y / AMG88xx_PIXEL_ARRAY_SIZE / 5.0;
     x = max(-1.0, min(1.0, x));
     y = max(-1.0, min(1.0, y));
-    magnitude = max(0, min(50, maxVal - 20));
+    magnitude = max(0, min(50, maxVal - MIN_MAGNITUDE));
+
+    rotate_coords(x, y);
+    filter_coords(x, y);
 
     // Report.
 #define SERIAL_OUT  3
@@ -73,7 +141,7 @@ void HeatSensor::find_focus()
     const char charPixels[] = " .-*o0#";
     Serial.println("========");
     for (int i = 1; i <= AMG88xx_PIXEL_ARRAY_SIZE; i++) {
-      int val = min(5, round(max(0, pixels[i-1] - 20) / 2));
+      int val = min(5, round(max(0, pixels[i-1] - MIN_MAGNITUDE) / 2));
       Serial.print(charPixels[val]);
       if (i % 8 == 0) 
         Serial.println();
@@ -108,3 +176,4 @@ void loop() {
     delay(200);
 }
 */
+#endif

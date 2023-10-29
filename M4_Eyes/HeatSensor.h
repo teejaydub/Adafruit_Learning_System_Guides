@@ -11,19 +11,42 @@
 #ifndef __HEAT_SENSOR_H
 #define __HEAT_SENSOR_H
 
+// Below this pixel temperature, we take it that there's "no" visible heat.
+// That is, this maps to a zero magnitude, and anything lower is represented as zero.
+const float MIN_MAGNITUDE = 19;
+
 class HeatSensor {
 public:
     // The current focus position, each from -1.0 .. +1.0.
     float x, y;
 
-    // The current magnitude estimate, in degrees C.
+    // The current magnitude estimate, in degrees C above MIN_MAGNITUDE.
+    // 0 is the minimum number returned.
     float magnitude;
 
-    // Must be called once.
+    // Set this to adjust the readings before they're reported.
+    // If the board is rotated clockwise by the given angle from its home orientation,
+    // described above, set the corresponding enum value.
+    enum {
+        ROTATE_0, ROTATE_90, ROTATE_180, ROTATE_270
+    } rotation;
+
+    // Constructor.
+    HeatSensor();
+
+    // Must be called once to initialize the sensor.
     void setup();
 
     // Reads the sensor and updates x, y, and magnitude.
     void find_focus();
+
+protected:
+    // Modifies the given coordinates in-place according to the current rotation.
+    void rotate_coords(float& x, float& y);
+
+    // Prevents noise from causing too-rapid fluctuation of the focus point.
+    // Modifies the given coordinates in-place.
+    void filter_coords(float& x, float& y);
 };
 
 #endif

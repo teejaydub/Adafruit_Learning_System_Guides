@@ -1,11 +1,17 @@
-#if 0 // Change to 0 to disable this code (must enable ONE user*.cpp only!)
+#if 0 // Change to 1 to enable this code (must enable ONE user*.cpp only!)
+// CORRESPONDING LINE IN HeatSensor.cpp MUST ALSO BE ENABLED!
 
 #include "globals.h"
 #include "heatSensor.h"
 
-
 // For heat sensing
 HeatSensor heatSensor;
+
+const int BACKLIGHT_DELAY_FRAMES = 80;
+const int CLOSE_ENOUGH = 6;  // degrees above 20
+const int MIN_BACKLIGHT = 10;  // where the backlight sits when it's idle
+int lastBacklight = 0;
+int backlightTarget = 0;
 
 // This file provides a crude way to "drop in" user code to the eyes,
 // allowing concurrent operations without having to maintain a bunch of
@@ -23,6 +29,7 @@ void user_setup(void) {
   showSplashScreen = false;
   moveEyesRandomly = false;
   heatSensor.setup();
+  heatSensor.rotation = HeatSensor::ROTATE_90;
 }
 
 // Called periodically during eye animation. This is invoked in the
@@ -37,6 +44,13 @@ void user_loop(void) {
   // Set values for the new X and Y.
   eyeTargetX = heatSensor.x;
   eyeTargetY = -heatSensor.y;
+
+  // Set the backlight brightness according to how close the visitor is.
+  // But change it slowly.
+  backlightTarget = map(min(6, heatSensor.magnitude), 0, CLOSE_ENOUGH, MIN_BACKLIGHT, 255);
+  int nextBacklight = (lastBacklight * BACKLIGHT_DELAY_FRAMES + backlightTarget) / (BACKLIGHT_DELAY_FRAMES + 1);
+  arcada.setBacklight(nextBacklight);
+  lastBacklight = nextBacklight;
 }
 
 #endif // 0
