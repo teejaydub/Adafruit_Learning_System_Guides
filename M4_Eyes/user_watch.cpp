@@ -1,8 +1,21 @@
 #if 1 // Change to 1 to enable this code (must enable ONE user*.cpp only!)
 // CORRESPONDING LINE IN HeatSensor.cpp MUST ALSO BE ENABLED!
 
+// This User module tracks the center of heat from an IR sensor.
+// Optionally, it also uses a servo to rotate the head left and right to track further.
+
+// The pin on which the left-right servo is attached.
+// Comment out to disable servo support.
+// #define SERVO_PIN  3
+
 #include "globals.h"
 #include "heatSensor.h"
+
+#ifdef SERVO_PIN
+ #include <Servo.h>
+ static Servo myServo;
+ static int headAngle = 90;
+#endif
 
 // For heat sensing
 HeatSensor heatSensor;
@@ -10,8 +23,8 @@ HeatSensor heatSensor;
 const int BACKLIGHT_DELAY_FRAMES = 80;
 const int CLOSE_ENOUGH = 6;  // degrees above 20
 const int MIN_BACKLIGHT = 10;  // where the backlight sits when it's idle
-int lastBacklight = 0;
-int backlightTarget = 0;
+static int lastBacklight = 0;
+static int backlightTarget = 0;
 
 // This file provides a crude way to "drop in" user code to the eyes,
 // allowing concurrent operations without having to maintain a bunch of
@@ -30,6 +43,10 @@ void user_setup(void) {
   moveEyesRandomly = false;
   heatSensor.setup();
   heatSensor.rotation = HeatSensor::ROTATE_90;
+
+  #ifdef SERVO_PIN
+  myServo.attach(SERVO_PIN);
+  #endif
 }
 
 // Called periodically during eye animation. This is invoked in the
@@ -51,6 +68,12 @@ void user_loop(void) {
   int nextBacklight = (lastBacklight * BACKLIGHT_DELAY_FRAMES + backlightTarget) / (BACKLIGHT_DELAY_FRAMES + 1);
   arcada.setBacklight(nextBacklight);
   lastBacklight = nextBacklight;
+
+  #ifdef SERVO_PIN
+  // For testing, just track the heat source with the servo.
+  headAngle = heatSensor.x * 10 + 90;  // +/- 10 degrees from the middle
+  myServo.write(headAngle);
+  #endif
 }
 
 #endif // 0
