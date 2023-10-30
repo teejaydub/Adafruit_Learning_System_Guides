@@ -6,15 +6,18 @@
 
 // The pin on which the left-right servo is attached.
 // Comment out to disable servo support.
-// #define SERVO_PIN  3
+#define SERVO_PIN  A2
+#define DEGREES_SWING_PLUS_MINUS  90  // How far to deviate the servo from 90 degrees (the middle)
+#define MS_PER_MOVE  1000  // Don't move more often than this.
 
 #include "globals.h"
 #include "heatSensor.h"
 
 #ifdef SERVO_PIN
- #include <Servo.h>
- static Servo myServo;
- static int headAngle = 90;
+  #include <Servo.h>
+  static Servo myServo;
+  static int headAngle = 90;
+  static unsigned long lastMoveMs = 0;  // millis() at time of last movement change
 #endif
 
 // For heat sensing
@@ -70,9 +73,12 @@ void user_loop(void) {
   lastBacklight = nextBacklight;
 
   #ifdef SERVO_PIN
-  // For testing, just track the heat source with the servo.
-  headAngle = heatSensor.x * 10 + 90;  // +/- 10 degrees from the middle
-  myServo.write(headAngle);
+  if (millis() - lastMoveMs > MS_PER_MOVE) {
+    // For testing, just track the heat source with the servo.
+    headAngle = heatSensor.x * DEGREES_SWING_PLUS_MINUS + 90;
+    Serial.println(headAngle);
+    myServo.write(headAngle);
+  }
   #endif
 }
 
