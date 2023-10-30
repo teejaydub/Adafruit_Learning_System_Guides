@@ -7,8 +7,12 @@
 // The pin on which the left-right servo is attached.
 // Comment out to disable servo support.
 #define SERVO_PIN  3
-#define DEGREES_SWING_PLUS_MINUS  90  // How far to deviate the servo from 90 degrees (the middle)
-#define MS_PER_MOVE  1000  // Don't move more often than this.
+#define DEGREES_SWING_PLUS_MINUS  60  // Furthest angle to deviate the servo from the middle
+#define SIGHT_HALF_ANGLE  20  // If the focus is at -1 or +1 in the heat sensor, 
+  // we should turn the head this many degrees to get it centered.
+#define MS_PER_MOVE  1000  // Move only after as you're pretty sure 
+  // the head will have reached the previous move target.
+  // This is the delay for a full move of SIGHT_HALF_ANGLE.
 
 #include "globals.h"
 #include "heatSensor.h"
@@ -73,11 +77,21 @@ void user_loop(void) {
   lastBacklight = nextBacklight;
 
   #ifdef SERVO_PIN
-  if (millis() - lastMoveMs > MS_PER_MOVE) {
+  // How far would we have to turn to get the head aligned straight at the focus?
+  int angleDelta = heatSensor.x * SIGHT_HALF_ANGLE;
+  int newHeadAngle = headAngle + angleDelta;
+  // Constrain that to the limits of neck motion.
+  newHeadAngle = min(90 + DEGREES_SWING_PLUS_MINUS, max(90 - DEGREES_SWING_PLUS_MINUS, newHeadAngle));
+  angleDelta = newHeadAngle - headAngle;
+  // Is that enough of a discrepancy to make it worth it, this soon after a previous move?
+  // If it's a big difference, do it soon; if it's small, wait longer.
+  unsigned long waitTime = MS_PER_MOVE * SIGHT_HALF_ANGLE * 1.0 / abs(angleDelta);
+  if (millis() - lastMoveMs > waitTime) {
     // For testing, just track the heat source with the servo.
-    headAngle = heatSensor.x * DEGREES_SWING_PLUS_MINUS + 90;
+    headAngle = newHeadAngle;
     Serial.println(headAngle);
     myServo.write(headAngle);
+    lastMoveMs = millis();
   }
   #endif
 }
