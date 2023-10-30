@@ -15,6 +15,15 @@
 // The larger the value, the more tolerant the filter is of big changes.
 const float SQUELCH = 0.6;
 
+// Define this to output the camera image to serial.
+// 0 = none
+// 1 = coordinates of the focus spot and magnitude
+// 2 = add a compressed ASCII-art rendering
+// 3 = all the numbers
+#define SERIAL_OUT  2
+// If this and SERIAL_OUT are defined, also log the filtering process that discards outliers
+#define LOG_SQUELCHING  0
+
 Adafruit_AMG88xx amg;
 
 float pixels[AMG88xx_PIXEL_ARRAY_SIZE];
@@ -78,7 +87,7 @@ void HeatSensor::filter_coords(float& x, float& y)
     if (abs(x - oldX) >= SQUELCH || abs(y - oldY) >= SQUELCH) {
         // Filter this one out.
         // So, use the last coordinates, but save these for comparison next time.
-        #if SERIAL_OUT == 3 || SERIAL_OUT == 2
+        #if LOG_SQUELCHING && (SERIAL_LOG > 0)
             // Print coordinates and brightness
             Serial.print("filtering out: ");
             Serial.print(x);
@@ -124,8 +133,7 @@ void HeatSensor::find_focus()
     filter_coords(x, y);
 
     // Report.
-#define SERIAL_OUT  3
-#if SERIAL_OUT == 1
+#if SERIAL_OUT == 3
     // Print raw values
     Serial.print("[");
     for(int i=1; i<=AMG88xx_PIXEL_ARRAY_SIZE; i++){
@@ -148,7 +156,7 @@ void HeatSensor::find_focus()
     }
     Serial.println();
 #endif
-#if SERIAL_OUT == 3 || SERIAL_OUT == 2
+#if SERIAL_OUT >= 1
     // Print coordinates and brightness
     Serial.print(x);
     Serial.print(' ');
