@@ -6,7 +6,7 @@
 
 // The pin on which the left-right servo is attached.
 // Comment out to disable servo support.
-#define SERVO_PIN  A2
+#define SERVO_PIN  3
 #define DEGREES_SWING_PLUS_MINUS  90  // How far to deviate the servo from 90 degrees (the middle)
 #define MS_PER_MOVE  1000  // Don't move more often than this.
 
