@@ -99,6 +99,7 @@ void loadConfig(char *filename) {
       eyelidIndex     = dwim(doc["eyelidIndex"]);
       irisRadius      = dwim(doc["irisRadius"]);
       slitPupilRadius = dwim(doc["slitPupilRadius"]);
+      doBooping       = dwim(doc["doBooping"]);
       JsonVariant v;
       v = doc["coverage"];
       if(v.is<int>() || v.is<float>()) coverage = v.as<float>();

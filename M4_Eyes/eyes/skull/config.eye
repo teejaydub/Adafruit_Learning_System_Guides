@@ -11,5 +11,6 @@
   "irisTexture"     : "skull/iris_red.bmp",
   "scleraColor"     : [ 0, 0, 0 ],
   "scleraTexture"   : "skull/dark-sclera.bmp",
-  "tracking"        : false
+  "tracking"        : false,
+  "doBooping"       : false
 }

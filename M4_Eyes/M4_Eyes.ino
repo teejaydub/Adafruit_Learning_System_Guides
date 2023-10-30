@@ -412,7 +412,7 @@ void setup() {
 #endif
 
   yield();
-  if(boopPin >= 0) {
+  if (doBooping && boopPin >= 0) {
     boopThreshold = 0;
     for(int i=0; i<DISPLAY_SIZE; i++) {
       boopThreshold += readBoop();
@@ -607,7 +607,7 @@ void loop() {
       }
 
       // Once per frame (of eye #0), reset boopSum...
-      if((eyeNum == 0) && (boopPin >= 0)) {
+      if(doBooping && (eyeNum == 0) && (boopPin >= 0)) {
         boopSumFiltered = ((boopSumFiltered * 3) + boopSum) / 4;
         if(boopSumFiltered > boopThreshold) {
           if(!booped) {

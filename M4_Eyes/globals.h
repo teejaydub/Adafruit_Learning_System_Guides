@@ -86,6 +86,7 @@ GLOBAL_VAR int8_t    blinkPin            GLOBAL_INIT(-1); // Manual both-eyes bl
   GLOBAL_VAR int8_t  boopPin             GLOBAL_INIT(-1);
 #endif
 GLOBAL_VAR uint32_t  boopThreshold       GLOBAL_INIT(17500);
+GLOBAL_VAR bool      doBooping           GLOBAL_INIT(true);
 
 #if defined(ADAFRUIT_MONSTER_M4SK_EXPRESS)
 GLOBAL_VAR bool      voiceOn             GLOBAL_INIT(false);
