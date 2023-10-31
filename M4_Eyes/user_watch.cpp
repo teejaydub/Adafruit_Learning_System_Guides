@@ -22,6 +22,7 @@
   static Servo myServo;
   static int headAngle = 90;
   static unsigned long lastMoveMs = 0;  // millis() at time of last movement change
+  static bool servoPaused = false;
 #endif
 
 // For heat sensing
@@ -77,15 +78,30 @@ void user_loop(void) {
   lastBacklight = nextBacklight;
 
   #ifdef SERVO_PIN
-  // How far would we have to turn to get the head aligned straight at the focus?
-  int angleDelta = heatSensor.x * SIGHT_HALF_ANGLE;
-  int newHeadAngle = headAngle + angleDelta;
-  // Constrain that to the limits of neck motion.
-  newHeadAngle = min(90 + DEGREES_SWING_PLUS_MINUS, max(90 - DEGREES_SWING_PLUS_MINUS, newHeadAngle));
-  angleDelta = newHeadAngle - headAngle;
-  // Is that enough of a discrepancy to make it worth it, this soon after a previous move?
-  // If it's a big difference, do it soon; if it's small, wait longer.
-  unsigned long waitTime = MS_PER_MOVE * SIGHT_HALF_ANGLE * 1.0 / abs(angleDelta);
+  // See if we should toggle pausing the servo.
+  arcada.readButtons();
+  uint32_t buttonState = arcada.justPressedButtons();
+  if(buttonState & ARCADA_BUTTONMASK_A)
+    servoPaused = !servoPaused;
+
+  unsigned long waitTime;
+  int newHeadAngle;
+  if (servoPaused) {
+    newHeadAngle = 90;
+    waitTime = 300;
+  } else {
+    // How far would we have to turn to get the head aligned straight at the focus?
+    int angleDelta = heatSensor.x * SIGHT_HALF_ANGLE;
+    newHeadAngle = headAngle + angleDelta;
+    // Constrain that to the limits of neck motion.
+    newHeadAngle = min(90 + DEGREES_SWING_PLUS_MINUS, max(90 - DEGREES_SWING_PLUS_MINUS, newHeadAngle));
+    angleDelta = newHeadAngle - headAngle;
+    // Is that enough of a discrepancy to make it worth it, this soon after a previous move?
+    // If it's a big difference, do it soon; if it's small, wait longer.
+    waitTime = MS_PER_MOVE * SIGHT_HALF_ANGLE * 1.0 / abs(angleDelta);
+  }
+
+  // Update the servo position.
   if (millis() - lastMoveMs > waitTime) {
     // For testing, just track the heat source with the servo.
     headAngle = newHeadAngle;
