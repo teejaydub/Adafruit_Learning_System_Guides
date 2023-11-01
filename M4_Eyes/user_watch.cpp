@@ -13,6 +13,7 @@
 #define MS_PER_MOVE  1000  // Move only after as you're pretty sure 
   // the head will have reached the previous move target.
   // This is the delay for a full move of SIGHT_HALF_ANGLE.
+#define STARTUP_DELAY_MS  5000  // Will center for this many seconds at startup.
 
 #include "globals.h"
 #include "heatSensor.h"
@@ -86,7 +87,7 @@ void user_loop(void) {
 
   unsigned long waitTime;
   int newHeadAngle;
-  if (servoPaused) {
+  if (servoPaused || (millis() < STARTUP_DELAY_MS)) {
     newHeadAngle = 90;
     waitTime = 300;
   } else {
