@@ -20,6 +20,8 @@
 #include "globals.h"
 #include "heatSensor.h"
 
+extern int fixate;
+
 #ifdef SERVO_PIN
   #include <ControlledServo.h>
   #include <Servo.h>
@@ -84,6 +86,10 @@ void user_loop(void) {
   arcada.setBacklight(nextBacklight);
   lastBacklight = nextBacklight;
 
+  // Also set the fixation according to how close the visitor is.
+  fixate = map(heatSensor.magnitude, 0, 17, 7, 40);
+  fixate = constrain(fixate, 7, 75);
+
   #ifdef SERVO_PIN
   // See if we should toggle pausing the servo.
   arcada.readButtons();
@@ -122,8 +128,11 @@ void user_loop(void) {
         NECK_SLOWEST_UPDATE_PERIOD, NECK_FASTEST_UPDATE_PERIOD
       );
     Serial.print("   angle period, ms: ");
-    Serial.println(updatePeriod);
+    Serial.print(updatePeriod);
     neck.setRate(updatePeriod);
+
+    Serial.print("   fixate: ");
+    Serial.println(fixate);
 
     neck.moveTo(headAngle);
     lastMoveMs = millis();
