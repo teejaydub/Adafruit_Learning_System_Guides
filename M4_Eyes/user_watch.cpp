@@ -7,10 +7,11 @@
 // The pin on which the left-right servo is attached.
 // Comment out to disable servo support.
 #define SERVO_PIN  3
+#define NECK_UPDATE_PERIOD  30  // ms/degree - larger is slower
 #define DEGREES_SWING_PLUS_MINUS  60  // Furthest angle to deviate the servo from the middle
 #define SIGHT_HALF_ANGLE  20  // If the focus is at -1 or +1 in the heat sensor, 
   // we should turn the head this many degrees to get it centered.
-#define MS_PER_MOVE  1000  // Move only after as you're pretty sure 
+#define MS_PER_MOVE  1000  // Move only after you're pretty sure 
   // the head will have reached the previous move target.
   // This is the delay for a full move of SIGHT_HALF_ANGLE.
 #define STARTUP_DELAY_MS  5000  // Will center for this many seconds at startup.
@@ -19,8 +20,10 @@
 #include "heatSensor.h"
 
 #ifdef SERVO_PIN
+  #include <ControlledServo.h>
   #include <Servo.h>
-  static Servo myServo;
+  static Servo s_neck;
+  static ControlledServo neck;
   static int headAngle = 90;
   static unsigned long lastMoveMs = 0;  // millis() at time of last movement change
   static bool servoPaused = false;
@@ -54,7 +57,9 @@ void user_setup(void) {
   heatSensor.rotation = HeatSensor::ROTATE_90;
 
   #ifdef SERVO_PIN
-  myServo.attach(SERVO_PIN);
+  s_neck.attach(SERVO_PIN);
+  neck.setServo(s_neck);
+  neck.setRate(NECK_UPDATE_PERIOD);
   #endif
 }
 
@@ -104,12 +109,12 @@ void user_loop(void) {
 
   // Update the servo position.
   if (millis() - lastMoveMs > waitTime) {
-    // For testing, just track the heat source with the servo.
     headAngle = newHeadAngle;
     Serial.println(headAngle);
-    myServo.write(headAngle);
+    neck.moveTo(headAngle);
     lastMoveMs = millis();
   }
+  neck.update();
   #endif
 }
 
