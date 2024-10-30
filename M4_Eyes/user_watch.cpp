@@ -7,11 +7,12 @@
 // The pin on which the left-right servo is attached.
 // Comment out to disable servo support.
 #define SERVO_PIN  3
-#define NECK_UPDATE_PERIOD  30  // ms/degree - larger is slower
+#define NECK_SLOWEST_UPDATE_PERIOD  30  // ms/degree - larger is slower
+#define NECK_FASTEST_UPDATE_PERIOD  20  // ms/degree - larger is slower
 #define DEGREES_SWING_PLUS_MINUS  60  // Furthest angle to deviate the servo from the middle
 #define SIGHT_HALF_ANGLE  20  // If the focus is at -1 or +1 in the heat sensor, 
   // we should turn the head this many degrees to get it centered.
-#define MS_PER_MOVE  1000  // Move only after you're pretty sure 
+#define MS_PER_MOVE  300  // Move only after you're pretty sure 
   // the head will have reached the previous move target.
   // This is the delay for a full move of SIGHT_HALF_ANGLE.
 #define STARTUP_DELAY_MS  5000  // Will center for this many seconds at startup.
@@ -59,7 +60,7 @@ void user_setup(void) {
   #ifdef SERVO_PIN
   s_neck.attach(SERVO_PIN);
   neck.setServo(s_neck);
-  neck.setRate(NECK_UPDATE_PERIOD);
+  neck.setRate(NECK_SLOWEST_UPDATE_PERIOD);
   #endif
 }
 
@@ -91,13 +92,14 @@ void user_loop(void) {
     servoPaused = !servoPaused;
 
   unsigned long waitTime;
-  int newHeadAngle;
+  int newHeadAngle, angleDelta;
   if (servoPaused || (millis() < STARTUP_DELAY_MS)) {
     newHeadAngle = 90;
     waitTime = 300;
+    angleDelta = 0;
   } else {
     // How far would we have to turn to get the head aligned straight at the focus?
-    int angleDelta = heatSensor.x * SIGHT_HALF_ANGLE;
+    angleDelta = heatSensor.x * SIGHT_HALF_ANGLE;
     newHeadAngle = headAngle + angleDelta;
     // Constrain that to the limits of neck motion.
     newHeadAngle = min(90 + DEGREES_SWING_PLUS_MINUS, max(90 - DEGREES_SWING_PLUS_MINUS, newHeadAngle));
@@ -110,7 +112,19 @@ void user_loop(void) {
   // Update the servo position.
   if (millis() - lastMoveMs > waitTime) {
     headAngle = newHeadAngle;
-    Serial.println(headAngle);
+    Serial.print("neck angle: ");
+    Serial.print(headAngle);
+
+    // Set a speed proportional to the angle.
+    int updatePeriod = map(
+        abs(angleDelta), 
+        0, SIGHT_HALF_ANGLE, 
+        NECK_SLOWEST_UPDATE_PERIOD, NECK_FASTEST_UPDATE_PERIOD
+      );
+    Serial.print("   angle period, ms: ");
+    Serial.println(updatePeriod);
+    neck.setRate(updatePeriod);
+
     neck.moveTo(headAngle);
     lastMoveMs = millis();
   }
